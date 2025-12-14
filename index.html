@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Multiples Audio</title>
+<title>Fullscreen Multiples of 17</title>
 <style>
   html, body {
     margin: 0;
     padding: 0;
-    height: 100%;
     width: 100%;
+    height: 100%;
     background: #111;
     color: #fff;
     display: flex;
@@ -20,8 +20,9 @@
     touch-action: manipulation;
   }
 
+  /* The number fills almost all the screen */
   #number {
-    font-size: 25vw;          /* scales with screen width */
+    font-size: 25vw;         /* landscape: fills width */
     max-height: 100%;
     white-space: nowrap;
     text-align: center;
@@ -30,100 +31,101 @@
 
   @media (orientation: portrait) {
     #number {
-      font-size: 40vw;        /* smaller in portrait */
+      font-size: 40vw;       /* portrait: smaller */
     }
   }
 
+  /* Tiny buttons tucked in top-left corner */
   .controls {
-    position: absolute;
-    top: 15px;
-    right: 15px;
+    position: fixed;
+    top: 10px;
+    left: 10px;
     display: flex;
-    gap: 8px;
+    gap: 6px;
+    z-index: 1000;
   }
 
-  button {
-    font-size: 14px;          /* smaller buttons */
-    padding: 6px 10px;
-    border-radius: 8px;
+  .controls button {
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 6px;
     border: none;
     background: #00c853;
     color: black;
   }
 
-  button.stop {
+  .controls button.stop {
     background: #ff5252;
   }
 
-  /* Fullscreen PWA mode */
+  /* Fullscreen for PWA mode */
   @media (display-mode: standalone) {
     body {
-      height: 100vh;
       width: 100vw;
+      height: 100vh;
     }
   }
 </style>
 </head>
 <body>
 
-  <div id="number">—</div>
+<div id="number">—</div>
 
-  <div class="controls">
-    <button onclick="start()">Start</button>
-    <button class="stop" onclick="stop()">Stop</button>
-  </div>
+<div class="controls">
+  <button onclick="start()">▶</button>
+  <button class="stop" onclick="stop()">⏹</button>
+</div>
 
-  <script>
-    let audioKeepAlive;
-    let running = false;
+<script>
+let audioKeepAlive;
+let running = false;
 
-    function randomMultipleOf17() {
-      const max = Math.floor(1700000 / 17);
-      return (Math.floor(Math.random() * max) + 1) * 17;
-    }
+function randomMultipleOf17() {
+  const max = Math.floor(1700000 / 17);
+  return (Math.floor(Math.random() * max) + 1) * 17;
+}
 
-    function speakAndScheduleNext() {
-      if (!running) return;
+function speakAndScheduleNext() {
+  if (!running) return;
 
-      const num = randomMultipleOf17();
-      document.getElementById("number").textContent = num;
+  const num = randomMultipleOf17();
+  document.getElementById("number").textContent = num;
 
-      const utterance = new SpeechSynthesisUtterance(num.toString());
-      utterance.rate = 0.9;
+  const utterance = new SpeechSynthesisUtterance(num.toString());
+  utterance.rate = 0.9;
 
-      // Schedule next number only after current finishes + 5s
-      utterance.onend = () => {
-        if (!running) return;
-        setTimeout(speakAndScheduleNext, 5000);
-      };
+  utterance.onend = () => {
+    if (!running) return;
+    setTimeout(speakAndScheduleNext, 5000);
+  };
 
-      speechSynthesis.speak(utterance);
-    }
+  speechSynthesis.speak(utterance);
+}
 
-    function start() {
-      if (running) return;
-      running = true;
+function start() {
+  if (running) return;
+  running = true;
 
-      audioKeepAlive = new Audio("https://upload.wikimedia.org/wikipedia/commons/8/8c/Silence_1s.mp3");
-      audioKeepAlive.loop = true;
-      audioKeepAlive.volume = 0.01;
-      audioKeepAlive.play();
+  audioKeepAlive = new Audio("https://upload.wikimedia.org/wikipedia/commons/8/8c/Silence_1s.mp3");
+  audioKeepAlive.loop = true;
+  audioKeepAlive.volume = 0.01;
+  audioKeepAlive.play();
 
-      speakAndScheduleNext();
-    }
+  speakAndScheduleNext();
+}
 
-    function stop() {
-      running = false;
-      speechSynthesis.cancel();
+function stop() {
+  running = false;
+  speechSynthesis.cancel();
 
-      if (audioKeepAlive) {
-        audioKeepAlive.pause();
-        audioKeepAlive = null;
-      }
+  if (audioKeepAlive) {
+    audioKeepAlive.pause();
+    audioKeepAlive = null;
+  }
 
-      document.getElementById("number").textContent = "—";
-    }
-  </script>
+  document.getElementById("number").textContent = "—";
+}
+</script>
 
 </body>
 </html>
