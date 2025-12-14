@@ -20,26 +20,20 @@
     touch-action: manipulation;
   }
 
-  /* The number fills almost all the screen */
+  /* Number fills most of the screen */
   #number {
-    font-size: 25vw;         /* landscape: fills width */
+    font-size: calc(10vw + 10vh); /* scales with both width and height */
     max-height: 100%;
     white-space: nowrap;
     text-align: center;
     user-select: none;
   }
 
-  @media (orientation: portrait) {
-    #number {
-      font-size: 40vw;       /* portrait: smaller */
-    }
-  }
-
-  /* Tiny buttons tucked in top-left corner */
+  /* Buttons tucked into top-left corner, very small */
   .controls {
     position: fixed;
-    top: 10px;
-    left: 10px;
+    top: env(safe-area-inset-top, 10px);
+    left: env(safe-area-inset-left, 10px);
     display: flex;
     gap: 6px;
     z-index: 1000;
@@ -58,11 +52,17 @@
     background: #ff5252;
   }
 
-  /* Fullscreen for PWA mode */
+  /* Fullscreen for PWA / Add to Home Screen */
   @media (display-mode: standalone) {
     body {
       width: 100vw;
       height: 100vh;
+    }
+  }
+
+  @media (orientation: portrait) {
+    #number {
+      font-size: calc(12vw + 12vh); /* slightly bigger in portrait */
     }
   }
 </style>
@@ -106,6 +106,7 @@ function start() {
   if (running) return;
   running = true;
 
+  // Tiny silent audio to keep iOS awake
   audioKeepAlive = new Audio("https://upload.wikimedia.org/wikipedia/commons/8/8c/Silence_1s.mp3");
   audioKeepAlive.loop = true;
   audioKeepAlive.volume = 0.01;
