@@ -42,39 +42,57 @@
   <div id="number">—</div>
 
   <script>
-    let interval = null;
+  let interval = null;
+  let audio = null;
 
-    function randomMultipleOf17() {
-      const max = Math.floor(1700000 / 17);
-      const n = Math.floor(Math.random() * max) + 1;
-      return n * 17;
+  function randomMultipleOf17() {
+    const max = Math.floor(1700000 / 17);
+    const n = Math.floor(Math.random() * max) + 1;
+    return n * 17;
+  }
+
+  function speak(text) {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.9;
+    utterance.pitch = 1.0;
+    speechSynthesis.cancel();
+    speechSynthesis.speak(utterance);
+  }
+
+  function start() {
+    if (interval) return;
+
+    // Start silent audio to keep iOS alive
+    audio = new Audio(
+      "https://upload.wikimedia.org/wikipedia/commons/8/8c/Silence_1s.mp3"
+    );
+    audio.loop = true;
+    audio.volume = 0.01;
+    audio.play();
+
+    speak("Starting");
+
+    interval = setInterval(() => {
+      const num = randomMultipleOf17();
+      document.getElementById("number").textContent = num;
+      speak(num.toString());
+    }, 5000);
+  }
+
+  function stop() {
+    clearInterval(interval);
+    interval = null;
+
+    if (audio) {
+      audio.pause();
+      audio = null;
     }
 
-    function speak(text) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.9;
-      utterance.pitch = 1.0;
-      speechSynthesis.cancel();
-      speechSynthesis.speak(utterance);
-    }
+    speechSynthesis.cancel();
+    document.getElementById("number").textContent = "—";
+  }
+</script>
 
-    function start() {
-      if (interval) return;
-      speak("Starting");
-      interval = setInterval(() => {
-        const num = randomMultipleOf17();
-        document.getElementById("number").textContent = num;
-        speak(num.toString());
-      }, 5000);
-    }
-
-    function stop() {
-      clearInterval(interval);
-      interval = null;
-      speechSynthesis.cancel();
-      document.getElementById("number").textContent = "—";
-    }
-  </script>
 
 </body>
 </html>
