@@ -1,128 +1,130 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>17x Audio Trainer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Multiples Audio</title>
   <style>
-  html, body {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    width: 100%;
-    background: #111;
-    color: #fff;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-    text-align: center;
-  }
-
-  button {
-    font-size: 22px;
-    padding: 15px 30px;
-    margin: 10px;
-    border-radius: 12px;
-    border: none;
-    background: #00c853;
-    color: black;
-  }
-
-  button.stop {
-    background: #ff5252;
-  }
-
-  #number {
-    font-size: 20vw;          /* Responsive size based on viewport width */
-    line-height: 1.1;
-    max-width: 100%;
-    max-height: 90%;           /* Prevent overflow vertically */
-    word-wrap: break-word;
-    white-space: nowrap;
-  }
-
-  @media (orientation: portrait) {
-    #number {
-      font-size: 35vw;        /* Portrait size smaller to fit screen */
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      background: #111;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      overflow: hidden;
+      touch-action: manipulation;
     }
-  }
-</style>
+
+    #number {
+      font-size: 20vw;          /* scales with screen width */
+      max-height: 100%;
+      white-space: nowrap;
+      text-align: center;
+      user-select: none;
+    }
+
+    @media (orientation: portrait) {
+      #number {
+        font-size: 35vw;        /* smaller in portrait mode */
+      }
+    }
+
+    .controls {
+      position: absolute;
+      top: 10px;
+      right: 10px;             /* move buttons to top-right corner */
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    button {
+      font-size: 18px;
+      padding: 8px 12px;
+      border-radius: 10px;
+      border: none;
+      background: #00c853;
+      color: black;
+    }
+
+    button.stop {
+      background: #ff5252;
+    }
+
+    /* Optional: make page behave like fullscreen PWA when added to home screen */
+    @media (display-mode: standalone) {
+      body {
+        height: 100vh;
+        width: 100vw;
+      }
+    }
+  </style>
 </head>
 <body>
 
-  <h1>Multiples of 17</h1>
-  <p>Every 5 seconds</p>
-
-  <button onclick="start()">Start</button>
-  <button class="stop" onclick="stop()">Stop</button>
-
   <div id="number">—</div>
 
+  <div class="controls">
+    <button onclick="start()">Start</button>
+    <button class="stop" onclick="stop()">Stop</button>
+  </div>
+
   <script>
-  let audioKeepAlive;
-  let running = false;
+    let audioKeepAlive;
+    let running = false;
 
-  function randomMultipleOf17() {
-    const max = Math.floor(1700000 / 17);
-    return (Math.floor(Math.random() * max) + 1) * 17;
-  }
+    function randomMultipleOf17() {
+      const max = Math.floor(1700000 / 17);
+      return (Math.floor(Math.random() * max) + 1) * 17;
+    }
 
-  function speakAndScheduleNext() {
-    if (!running) return;
-
-    const num = randomMultipleOf17();
-    document.getElementById("number").textContent = num;
-
-    const utterance = new SpeechSynthesisUtterance(num.toString());
-    utterance.rate = 0.9;
-
-    utterance.onend = () => {
+    function speakAndScheduleNext() {
       if (!running) return;
-      setTimeout(speakAndScheduleNext, 5000);
-    };
 
-    speechSynthesis.speak(utterance);
-  }
+      const num = randomMultipleOf17();
+      document.getElementById("number").textContent = num;
 
-  function start() {
-    if (running) return;
-    running = true;
+      const utterance = new SpeechSynthesisUtterance(num.toString());
+      utterance.rate = 0.9;
 
-    // Real audio playback to force lock-screen media state
-    audioKeepAlive = new Audio(
-      "https://upload.wikimedia.org/wikipedia/commons/8/8c/Silence_1s.mp3"
-    );
-    audioKeepAlive.loop = true;
-    audioKeepAlive.volume = 0.01;
-    audioKeepAlive.play();
+      utterance.onend = () => {
+        if (!running) return;
+        setTimeout(speakAndScheduleNext, 5000);
+      };
 
-    // Force lock screen media UI
-    if ("mediaSession" in navigator) {
-      navigator.mediaSession.metadata = new MediaMetadata({
-        title: "Multiples of 17",
-        artist: "Audio Trainer"
-      });
+      speechSynthesis.speak(utterance);
     }
 
-    speakAndScheduleNext();
-  }
+    function start() {
+      if (running) return;
+      running = true;
 
-  function stop() {
-    running = false;
-    speechSynthesis.cancel();
+      // Small silent audio to keep iOS awake
+      audioKeepAlive = new Audio("https://upload.wikimedia.org/wikipedia/commons/8/8c/Silence_1s.mp3");
+      audioKeepAlive.loop = true;
+      audioKeepAlive.volume = 0.01;
+      audioKeepAlive.play();
 
-    if (audioKeepAlive) {
-      audioKeepAlive.pause();
-      audioKeepAlive = null;
+      speakAndScheduleNext();
     }
 
-    document.getElementById("number").textContent = "—";
-  }
-</script>
+    function stop() {
+      running = false;
+      speechSynthesis.cancel();
 
+      if (audioKeepAlive) {
+        audioKeepAlive.pause();
+        audioKeepAlive = null;
+      }
+
+      document.getElementById("number").textContent = "—";
+    }
+  </script>
 
 </body>
 </html>
