@@ -42,53 +42,63 @@
   <div id="number">—</div>
 
   <script>
-  let interval = null;
-  let audio = null;
+  let audioKeepAlive;
+  let running = false;
 
   function randomMultipleOf17() {
     const max = Math.floor(1700000 / 17);
-    const n = Math.floor(Math.random() * max) + 1;
-    return n * 17;
+    return (Math.floor(Math.random() * max) + 1) * 17;
   }
 
-  function speak(text) {
-    const utterance = new SpeechSynthesisUtterance(text);
+  function speakAndScheduleNext() {
+    if (!running) return;
+
+    const num = randomMultipleOf17();
+    document.getElementById("number").textContent = num;
+
+    const utterance = new SpeechSynthesisUtterance(num.toString());
     utterance.rate = 0.9;
-    utterance.pitch = 1.0;
-    speechSynthesis.cancel();
+
+    utterance.onend = () => {
+      if (!running) return;
+      setTimeout(speakAndScheduleNext, 5000);
+    };
+
     speechSynthesis.speak(utterance);
   }
 
   function start() {
-    if (interval) return;
+    if (running) return;
+    running = true;
 
-    // Start silent audio to keep iOS alive
-    audio = new Audio(
+    // Real audio playback to force lock-screen media state
+    audioKeepAlive = new Audio(
       "https://upload.wikimedia.org/wikipedia/commons/8/8c/Silence_1s.mp3"
     );
-    audio.loop = true;
-    audio.volume = 0.01;
-    audio.play();
+    audioKeepAlive.loop = true;
+    audioKeepAlive.volume = 0.01;
+    audioKeepAlive.play();
 
-    speak("Starting");
+    // Force lock screen media UI
+    if ("mediaSession" in navigator) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: "Multiples of 17",
+        artist: "Audio Trainer"
+      });
+    }
 
-    interval = setInterval(() => {
-      const num = randomMultipleOf17();
-      document.getElementById("number").textContent = num;
-      speak(num.toString());
-    }, 5000);
+    speakAndScheduleNext();
   }
 
   function stop() {
-    clearInterval(interval);
-    interval = null;
+    running = false;
+    speechSynthesis.cancel();
 
-    if (audio) {
-      audio.pause();
-      audio = null;
+    if (audioKeepAlive) {
+      audioKeepAlive.pause();
+      audioKeepAlive = null;
     }
 
-    speechSynthesis.cancel();
     document.getElementById("number").textContent = "—";
   }
 </script>
