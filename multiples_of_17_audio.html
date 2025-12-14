@@ -1,0 +1,80 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>17x Audio Trainer</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #111;
+      color: #fff;
+      text-align: center;
+      padding: 40px;
+    }
+    button {
+      font-size: 22px;
+      padding: 15px 30px;
+      margin: 10px;
+      border-radius: 12px;
+      border: none;
+      background: #00c853;
+      color: black;
+    }
+    button.stop {
+      background: #ff5252;
+    }
+    #number {
+      font-size: 48px;
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Multiples of 17</h1>
+  <p>Every 5 seconds</p>
+
+  <button onclick="start()">Start</button>
+  <button class="stop" onclick="stop()">Stop</button>
+
+  <div id="number">—</div>
+
+  <script>
+    let interval = null;
+
+    function randomMultipleOf17() {
+      const max = Math.floor(1700000 / 17);
+      const n = Math.floor(Math.random() * max) + 1;
+      return n * 17;
+    }
+
+    function speak(text) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 0.9;
+      utterance.pitch = 1.0;
+      speechSynthesis.cancel();
+      speechSynthesis.speak(utterance);
+    }
+
+    function start() {
+      if (interval) return;
+      speak("Starting");
+      interval = setInterval(() => {
+        const num = randomMultipleOf17();
+        document.getElementById("number").textContent = num;
+        speak(num.toString());
+      }, 5000);
+    }
+
+    function stop() {
+      clearInterval(interval);
+      interval = null;
+      speechSynthesis.cancel();
+      document.getElementById("number").textContent = "—";
+    }
+  </script>
+
+</body>
+</html>
